@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#000000" />
+		<title>GHHS-NOTEBOOK</title>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+		/>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+				-webkit-tap-highlight-color: transparent;
+			}
+
+			body {
+				background: #000000;
+				color: rgba(255, 255, 255, 0.9);
+				min-height: 100vh;
+				line-height: 1.5;
+				overflow-x: hidden;
+				padding: 0;
+			}
+
+			.app-container {
+				max-width: 100%;
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				background: #000000;
+			}
+
+			/* Логотип и название */
+			.app-header {
+				padding: 20px;
+				padding-bottom: 10px;
+			}
+
+			.app-title {
+				font-weight: 800;
+				font-size: 28px;
+				letter-spacing: -0.5px;
+				display: flex;
+			}
+
+			.app-title-ghhs {
+				color: #ffffff;
+			}
+
+			.app-title-notebook {
+				color: #00f3ff;
+				text-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+				margin-left: 2px;
+			}
+
+			/* Основное содержимое */
+			.main-content {
+				flex: 1;
+				padding: 20px;
+				padding-top: 0;
+			}
+
+			/* Контейнер для заметок с эффектом стекла */
+			.notes-container {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 16px;
+				margin-top: 20px;
+			}
+
+			/* Эффект стекла для заметок */
+			.note-card {
+				background: rgba(20, 20, 20, 0.7);
+				backdrop-filter: blur(10px);
+				-webkit-backdrop-filter: blur(10px);
+				border-radius: 16px;
+				padding: 20px;
+				position: relative;
+				overflow: hidden;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+				cursor: pointer;
+				transition: transform 0.2s, box-shadow 0.2s;
+			}
+
+			/* Неоновая рамка */
+			.note-card::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				border-radius: 16px;
+				padding: 1px;
+				background: linear-gradient(
+					135deg,
+					rgba(255, 255, 255, 0.2) 0%,
+					rgba(255, 255, 255, 0.05) 50%,
+					rgba(255, 255, 255, 0.2) 100%
+				);
+				-webkit-mask: linear-gradient(#fff 0 0) content-box,
+					linear-gradient(#fff 0 0);
+				-webkit-mask-composite: xor;
+				mask-composite: exclude;
+				pointer-events: none;
+			}
+
+			.note-card:active {
+				transform: scale(0.98);
+			}
+
+			.note-title {
+				font-size: 18px;
+				font-weight: 600;
+				color: #ffffff;
+				margin-bottom: 10px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.note-content {
+				font-size: 14px;
+				color: rgba(255, 255, 255, 0.7);
+				overflow: hidden;
+				display: -webkit-box;
+				-webkit-line-clamp: 3;
+				-webkit-box-orient: vertical;
+				margin-bottom: 12px;
+				line-height: 1.5;
+			}
+
+			.note-footer {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 12px;
+				color: rgba(255, 255, 255, 0.5);
+			}
+
+			/* Кнопка добавления */
+			.add-button {
+				position: fixed;
+				bottom: 25px;
+				right: 25px;
+				width: 60px;
+				height: 60px;
+				border-radius: 50%;
+				background: rgba(20, 20, 20, 0.8);
+				backdrop-filter: blur(10px);
+				-webkit-backdrop-filter: blur(10px);
+				color: #00f3ff;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 28px;
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+				cursor: pointer;
+				z-index: 100;
+				border: 1px solid rgba(0, 243, 255, 0.3);
+				transition: all 0.2s;
+			}
+
+			.add-button:active {
+				transform: scale(0.95);
+				box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+			}
+
+			/* Модальное окно */
+			.modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.9);
+				display: none;
+				justify-content: center;
+				align-items: center;
+				z-index: 1000;
+				padding: 20px;
+			}
+
+			.modal-content {
+				background: rgba(15, 15, 15, 0.9);
+				backdrop-filter: blur(15px);
+				-webkit-backdrop-filter: blur(15px);
+				width: 100%;
+				max-width: 500px;
+				border-radius: 16px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				overflow: hidden;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+				position: relative;
+			}
+
+			.modal-content::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				border-radius: 16px;
+				padding: 1px;
+				background: linear-gradient(
+					135deg,
+					rgba(255, 255, 255, 0.2) 0%,
+					rgba(255, 255, 255, 0.05) 50%,
+					rgba(255, 255, 255, 0.2) 100%
+				);
+				-webkit-mask: linear-gradient(#fff 0 0) content-box,
+					linear-gradient(#fff 0 0);
+				-webkit-mask-composite: xor;
+				mask-composite: exclude;
+				pointer-events: none;
+			}
+
+			.modal-header {
+				padding: 20px;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.modal-title {
+				font-size: 20px;
+				font-weight: 600;
+				color: #ffffff;
+			}
+
+			.modal-body {
+				padding: 20px;
+			}
+
+			.input-group {
+				margin-bottom: 20px;
+			}
+
+			.modal-input {
+				width: 100%;
+				background: rgba(10, 10, 10, 0.7);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 10px;
+				padding: 15px;
+				color: #ffffff;
+				font-size: 16px;
+				outline: none;
+			}
+
+			.modal-input:focus {
+				border-color: rgba(0, 243, 255, 0.5);
+				box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+			}
+
+			.modal-textarea {
+				min-height: 200px;
+				resize: vertical;
+			}
+
+			.modal-footer {
+				padding: 15px 20px;
+				border-top: 1px solid rgba(255, 255, 255, 0.1);
+				display: flex;
+				justify-content: space-between;
+				gap: 10px;
+			}
+
+			.btn {
+				padding: 10px 15px;
+				border-radius: 8px;
+				font-size: 14px;
+				font-weight: 500;
+				cursor: pointer;
+				border: none;
+				transition: all 0.2s;
+				flex: 1;
+			}
+
+			.btn-primary {
+				background: rgba(0, 243, 255, 0.15);
+				color: #00f3ff;
+				border: 1px solid rgba(0, 243, 255, 0.2);
+			}
+
+			.btn-primary:active {
+				background: rgba(0, 243, 255, 0.25);
+				box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+			}
+
+			.btn-secondary {
+				background: rgba(255, 255, 255, 0.08);
+				color: rgba(255, 255, 255, 0.8);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.btn-secondary:active {
+				background: rgba(255, 255, 255, 0.15);
+			}
+
+			.btn-danger {
+				background: rgba(255, 50, 50, 0.15);
+				color: rgba(255, 100, 100, 0.9);
+				border: 1px solid rgba(255, 50, 50, 0.2);
+			}
+
+			.btn-danger:active {
+				background: rgba(255, 50, 50, 0.25);
+				box-shadow: 0 0 8px rgba(255, 50, 50, 0.3);
+			}
+
+			/* Состояние "нет заметок" */
+			.empty-state {
+				text-align: center;
+				padding: 60px 20px;
+				color: rgba(255, 255, 255, 0.5);
+			}
+
+			.empty-icon {
+				font-size: 48px;
+				margin-bottom: 16px;
+				opacity: 0.5;
+			}
+
+			.empty-state p {
+				margin-bottom: 8px;
+			}
+
+			/* Анимации */
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+					transform: translateY(20px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.note-card {
+				animation: fadeIn 0.3s ease-out;
+			}
+
+			/* Адаптивность */
+			@media (min-width: 768px) {
+				.notes-container {
+					grid-template-columns: repeat(2, 1fr);
+				}
+
+				.app-header {
+					padding: 30px;
+					padding-bottom: 20px;
+				}
+
+				.main-content {
+					padding: 30px;
+					padding-top: 0;
+				}
+			}
+
+			@media (min-width: 1024px) {
+				.notes-container {
+					grid-template-columns: repeat(3, 1fr);
+				}
+			}
+
+			/* Специальные стили для OLED */
+			.oled-dark {
+				background: #000000;
+			}
+
+			.oled-dark-gray {
+				background: #0a0a0a;
+			}
+
+			/* Скрытие скроллбара для чистого дизайна */
+			::-webkit-scrollbar {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="app-container">
+			<div class="app-header">
+				<div class="app-title">
+					<span class="app-title-ghhs">GHHS-</span>
+					<span class="app-title-notebook">NOTEBOOK</span>
+				</div>
+			</div>
+
+			<div class="main-content">
+				<div class="notes-container" id="notesContainer">
+					<div class="empty-state" id="emptyState">
+						<div class="empty-icon">📝</div>
+						<p>Заметок не найдено</p>
+						<p>Нажмите + чтобы создать первую</p>
+					</div>
+				</div>
+			</div>
+
+			<button class="add-button" id="addButton">+</button>
+
+			<div class="modal" id="noteModal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h2 class="modal-title" id="modalTitle">Новая заметка</h2>
+					</div>
+					<div class="modal-body">
+						<div class="input-group">
+							<input
+								type="text"
+								class="modal-input"
+								id="noteTitle"
+								placeholder="Заголовок"
+								maxlength="50"
+							/>
+						</div>
+						<div class="input-group">
+							<textarea
+								class="modal-input modal-textarea"
+								id="noteContent"
+								placeholder="Содержание заметки..."
+								maxlength="2000"
+							></textarea>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-danger" id="deleteButton">Удалить</button>
+						<button class="btn btn-secondary" id="cancelButton">Отмена</button>
+						<button class="btn btn-primary" id="saveButton">Сохранить</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				// Элементы DOM
+				const notesContainer = document.getElementById('notesContainer')
+				const emptyState = document.getElementById('emptyState')
+				const addButton = document.getElementById('addButton')
+				const noteModal = document.getElementById('noteModal')
+				const cancelButton = document.getElementById('cancelButton')
+				const saveButton = document.getElementById('saveButton')
+				const deleteButton = document.getElementById('deleteButton')
+				const noteTitle = document.getElementById('noteTitle')
+				const noteContent = document.getElementById('noteContent')
+				const modalTitle = document.getElementById('modalTitle')
+
+				let notes = loadNotesFromStorage()
+				let currentNoteId = null
+				let isEditMode = false
+
+				// Инициализация приложения
+				function init() {
+					displayNotes()
+					setupEventListeners()
+				}
+
+				// Настройка обработчиков событий
+				function setupEventListeners() {
+					addButton.addEventListener('click', openNewNoteModal)
+					cancelButton.addEventListener('click', closeNoteModal)
+					saveButton.addEventListener('click', saveNote)
+					deleteButton.addEventListener('click', deleteNote)
+
+					// Закрытие модального окна при клике вне его области
+					noteModal.addEventListener('click', function (event) {
+						if (event.target === noteModal) {
+							closeNoteModal()
+						}
+					})
+
+					// Закрытие по Escape
+					document.addEventListener('keydown', function (event) {
+						if (event.key === 'Escape') {
+							closeNoteModal()
+						}
+					})
+				}
+
+				// Загрузка заметок из localStorage
+				function loadNotesFromStorage() {
+					try {
+						const notes = localStorage.getItem('ghhs-notes')
+						return notes ? JSON.parse(notes) : []
+					} catch (error) {
+						console.error('Ошибка загрузки:', error)
+						return []
+					}
+				}
+
+				// Сохранение заметок в localStorage
+				function saveNotesToStorage(notes) {
+					try {
+						localStorage.setItem('ghhs-notes', JSON.stringify(notes))
+						return true
+					} catch (error) {
+						console.error('Ошибка сохранения:', error)
+						return false
+					}
+				}
+
+				// Генерация ID
+				function generateId() {
+					return (
+						Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
+					)
+				}
+
+				// Отображение заметок
+				function displayNotes() {
+					if (notes.length === 0) {
+						emptyState.style.display = 'block'
+						notesContainer.innerHTML = ''
+						notesContainer.appendChild(emptyState)
+						return
+					}
+
+					emptyState.style.display = 'none'
+					notesContainer.innerHTML = ''
+
+					notes.forEach(note => {
+						const noteElement = createNoteElement(note)
+						notesContainer.appendChild(noteElement)
+					})
+				}
+
+				// Создание элемента заметки
+				function createNoteElement(note) {
+					const noteElement = document.createElement('div')
+					noteElement.classList.add('note-card')
+					noteElement.setAttribute('data-id', note.id)
+
+					const titleElement = document.createElement('div')
+					titleElement.classList.add('note-title')
+					titleElement.textContent = note.title || 'Без названия'
+
+					const contentElement = document.createElement('div')
+					contentElement.classList.add('note-content')
+					contentElement.textContent = note.content || ''
+
+					const footerElement = document.createElement('div')
+					footerElement.classList.add('note-footer')
+
+					const dateElement = document.createElement('div')
+					dateElement.classList.add('note-date')
+					dateElement.textContent = formatDate(note.date)
+
+					footerElement.appendChild(dateElement)
+
+					noteElement.appendChild(titleElement)
+					noteElement.appendChild(contentElement)
+					noteElement.appendChild(footerElement)
+
+					noteElement.addEventListener('click', () => {
+						openEditNoteModal(note.id)
+					})
+
+					return noteElement
+				}
+
+				// Форматирование даты
+				function formatDate(dateString) {
+					const date = new Date(dateString)
+					const now = new Date()
+					const diffTime = Math.abs(now - date)
+					const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+					if (diffDays === 0) {
+						return (
+							'Сегодня, ' +
+							date.toLocaleTimeString('ru-RU', {
+								hour: '2-digit',
+								minute: '2-digit',
+							})
+						)
+					} else if (diffDays === 1) {
+						return (
+							'Вчера, ' +
+							date.toLocaleTimeString('ru-RU', {
+								hour: '2-digit',
+								minute: '2-digit',
+							})
+						)
+					} else {
+						return date.toLocaleDateString('ru-RU', {
+							day: '2-digit',
+							month: '2-digit',
+							year: 'numeric',
+						})
+					}
+				}
+
+				// Открытие модального окна для новой заметки
+				function openNewNoteModal() {
+					isEditMode = false
+					currentNoteId = null
+					modalTitle.textContent = 'Новая заметка'
+					noteTitle.value = ''
+					noteContent.value = ''
+					deleteButton.style.display = 'none'
+					noteModal.style.display = 'flex'
+					setTimeout(() => noteTitle.focus(), 100)
+				}
+
+				// Открытие модального окна для редактирования заметки
+				function openEditNoteModal(noteId) {
+					const note = notes.find(n => n.id === noteId)
+					if (!note) return
+
+					isEditMode = true
+					currentNoteId = noteId
+					modalTitle.textContent = 'Редактировать заметку'
+					noteTitle.value = note.title || ''
+					noteContent.value = note.content || ''
+					deleteButton.style.display = 'block'
+					noteModal.style.display = 'flex'
+					setTimeout(() => noteTitle.focus(), 100)
+				}
+
+				// Сохранение заметки
+				function saveNote() {
+					const title = noteTitle.value.trim()
+					const content = noteContent.value.trim()
+
+					if (!content) {
+						alert('Заметка не может быть пустой!')
+						return
+					}
+
+					const newNote = {
+						id: isEditMode ? currentNoteId : generateId(),
+						title: title,
+						content: content,
+						date: new Date().toISOString(),
+					}
+
+					if (isEditMode) {
+						// Обновление существующей заметки
+						const index = notes.findIndex(n => n.id === currentNoteId)
+						if (index !== -1) {
+							notes[index] = newNote
+						}
+					} else {
+						// Добавление новой заметки
+						notes.unshift(newNote)
+					}
+
+					// Сохранение и обновление интерфейса
+					if (saveNotesToStorage(notes)) {
+						displayNotes()
+						closeNoteModal()
+					} else {
+						alert('Ошибка сохранения!')
+					}
+				}
+
+				// Удаление заметки
+				function deleteNote() {
+					if (!currentNoteId) return
+
+					if (confirm('Удалить эту заметку?')) {
+						notes = notes.filter(note => note.id !== currentNoteId)
+
+						if (saveNotesToStorage(notes)) {
+							displayNotes()
+							closeNoteModal()
+						} else {
+							alert('Ошибка удаления!')
+						}
+					}
+				}
+
+				// Закрытие модального окна
+				function closeNoteModal() {
+					noteModal.style.display = 'none'
+				}
+
+				// Запуск приложения
+				init()
+			})
+		</script>
+	</body>
+</html>
